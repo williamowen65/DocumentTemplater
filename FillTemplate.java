@@ -34,7 +34,6 @@ public class FillTemplate {
         while (fileScanner.hasNextLine()) {
             String templateLine = fileScanner.nextLine();
 
-
             // Replace templates with user responses to prompts
             // Find number of opening tags in line
             for (int i = 0; i < templateLine.length() - 1; i++) {
@@ -58,10 +57,16 @@ public class FillTemplate {
 
         // create copy of placeholders
         Queue<Map<String, String>> copyPlaceholders = new LinkedList<>(placeholders);
+        // Update the linked list to be a map of placeholders and responses
+        Map<String, String> combinedPlaceholders = new HashMap<>();
 
         while (!copyPlaceholders.isEmpty()) {
             Map<String, String> placeholder = copyPlaceholders.poll();
             for (String key : placeholder.keySet()) {
+                if(combinedPlaceholders.containsKey(key)) {
+                    continue;
+                }   
+                combinedPlaceholders.put(key, "");  
                 newFileOutput.println(key + ": \n");
             }
         }
@@ -89,12 +94,9 @@ public class FillTemplate {
         File fileToRead = new File("placeholders.txt");
         Scanner newFileScanner = new Scanner(fileToRead, "UTF-8");
 
-        // Update the linked list to be a map of placeholders and responses
-        Map<String, String> combinedPlaceholders = new HashMap<>();
-
-        for (Map<String, String> map : placeholders) {
-            combinedPlaceholders.putAll(map);
-        }
+        // for (Map<String, String> map : placeholders) {
+        // combinedPlaceholders.putAll(map);
+        // }
 
         while (newFileScanner.hasNextLine()) {
             String line = newFileScanner.nextLine();
@@ -114,8 +116,6 @@ public class FillTemplate {
                     combinedPlaceholders.put(key, answer);
                 }
             }
-
-
         }
 
         // Create output file
@@ -129,7 +129,6 @@ public class FillTemplate {
 
         while (fileScanner2.hasNextLine()) {
             String templateLine = fileScanner2.nextLine();
-
 
             // Replace templates with user responses to prompts
             // Find number of opening tags in line
@@ -145,9 +144,12 @@ public class FillTemplate {
                                 if (combinedPlaceholders.get(placeholder).length() > 0) {
                                     templateLine = templateLine.replace(placeholder,
                                             combinedPlaceholders.get(placeholder));
+
+                                    i = 0;
                                 }
+                                
                             }
-                            i = j; // Move the outer loop index to the end of the current placeholder
+                            // Move the outer loop index to the end of the current placeholder
                             break; // Exit the inner loop
                         }
                     }
@@ -159,11 +161,9 @@ public class FillTemplate {
 
         }
 
-        
         // Write the processed line to the output file
         System.out.println("File processed. Output file created: " + outputFile);
-        
-        
+
         // Open up output file in notepad
         try {
             Runtime.getRuntime().exec("notepad " + outputFile.getAbsolutePath());
