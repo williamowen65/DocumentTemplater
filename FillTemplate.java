@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -38,7 +39,7 @@ public class FillTemplate {
         // System.out.println("fileScanner" +  fileScanner);
         // System.out.println("fileScanner.hasNextLine()" +  fileScanner.hasNextLine());
 
-        Queue<Map> placeholders = new LinkedList<>();
+        Queue<Map<String,String>> placeholders = new LinkedList<>();
 
         while (fileScanner.hasNextLine()) {
             String templateLine = fileScanner.nextLine();
@@ -73,12 +74,14 @@ public class FillTemplate {
         File placeHolderFile = new File("placeholders.txt");
         PrintStream newFileOutput = new PrintStream(placeHolderFile);
         
+        // create copy of placeholders
+        Queue<Map<String,String>> copyPlaceholders = new LinkedList<>(placeholders);
 
 
-        while (!placeholders.isEmpty()) {
-            Map<String, String> placeholder = placeholders.poll();
+        while (!copyPlaceholders.isEmpty()) {
+            Map<String, String> placeholder = copyPlaceholders.poll();
             for (String key : placeholder.keySet()) {
-                newFileOutput.println(key + ": \n");
+            newFileOutput.println(key + ": \n");
             }
         }
 
@@ -105,9 +108,17 @@ public class FillTemplate {
         File fileToRead = new File("placeholders.txt");
         Scanner newFileScanner = new Scanner(fileToRead, "UTF-8");
 
-        System.out.println("fileToRead: " + fileToRead);
-        System.out.println("newFileScanner: " + newFileScanner);
-        System.out.println("newFileScanner.hasNextLine(): " + newFileScanner.hasNextLine());
+        // System.out.println("fileToRead: " + fileToRead);
+        // System.out.println("newFileScanner: " + newFileScanner);
+        // System.out.println("newFileScanner.hasNextLine(): " + newFileScanner.hasNextLine());
+
+        // Update the linked list to be a map of placeholders and responses
+        Map<String, String> combinedPlaceholders = new HashMap<>();
+
+        for (Map<String, String> map : placeholders) {
+            combinedPlaceholders.putAll(map);
+        }
+
 
         while (newFileScanner.hasNextLine()) {
             String line = newFileScanner.nextLine();
@@ -117,11 +128,19 @@ public class FillTemplate {
                 continue;
             }
             // print prompt and answer
-            System.out.println("Prompt: " + prompt);
+            // System.out.println("Prompt: " + prompt);
            
             String answer = line.substring(line.indexOf(">:") + 2).trim();
 
-            System.out.println("Answer: " + answer);
+            // Set map values in combinedPlaceholders
+            for (String key : combinedPlaceholders.keySet()) {
+                if (key.equals(prompt)) {
+                    combinedPlaceholders.put(key, answer);
+                }
+            }
+
+          
+            // System.out.println("Answer: " + answer);
 
         }
 
@@ -148,14 +167,10 @@ public class FillTemplate {
                         if (templateLine.charAt(j) == '>') {
                             String placeholder = templateLine.substring(i, j + 1);
                             System.out.println("Placeholder: " + placeholder);
-                            System.out.println("Placeholders: " + placeholders);
-                            for (Map<String, String> map : placeholders) {
-                                for (String key : map.keySet()) {
-                                    if (key.equals(placeholder.replace("<", "").replace(">",""))) {
-                                        // System.out.println("Found key: " + key);
-                                        // System.out.println("Found value: " + map.get(key));
-                                        templateLine = templateLine.replace(placeholder, map.get(key));
-                                    }
+                            System.out.println("combinedPlaceholders: " + combinedPlaceholders);
+                            if (combinedPlaceholders.containsKey(placeholder)) {
+                                if(combinedPlaceholders.get(placeholder).length() > 0) {
+                                    templateLine = templateLine.replace(placeholder, combinedPlaceholders.get(placeholder));
                                 }
                             }
                             i = j; // Move the outer loop index to the end of the current placeholder
